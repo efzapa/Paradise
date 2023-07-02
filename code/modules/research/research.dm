@@ -54,7 +54,7 @@ research holder datum.
 	var/list/possible_designs = list()		//List of all designs
 	var/list/known_designs = list()			//List of available designs
 	/// List of designs that have been blacklisted by the server controller
-	var/list/blacklisted_designs = list()		
+	var/list/blacklisted_designs = list()
 	/// Used during the rnd sync system, to ensure that blacklists are reverted, then cleared.
 	var/list/unblacklisted_designs = list()
 
@@ -211,6 +211,21 @@ research holder datum.
 	if(design.build_type & GAMMALATHE)
 		return TRUE
 	return ..()
+
+//Clothlathe files
+/datum/research/clothlathe
+
+/datum/research/clothlathe/DesignHasReqs(datum/design/D)
+	return D && (D.build_type & CLOTHLATHE) && ("initial" in D.category)
+
+/datum/research/clothlathe/CanAddDesign2Known(datum/design/design)
+
+	for(var/mat in design.materials)
+		if(mat != MAT_METAL && mat != MAT_GLASS)
+			return FALSE
+
+	return ..()
+
 
 //Biogenerator files
 /datum/research/biogenerator/New()

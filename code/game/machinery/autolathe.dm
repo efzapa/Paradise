@@ -38,6 +38,30 @@
 	var/list/categories = list("Tools", "Electronics", "Construction", "Communication", "Security", "Machinery", "Medical", "Miscellaneous", "Dinnerware", "Imported")
 	var/board_type = /obj/item/circuitboard/autolathe
 
+/obj/machinery/autolathe/clothlathe
+	name = "clothlathe"
+	desc = "It produces items using cloth and durathread."
+	icon_state = "clothlathe"
+	density = TRUE
+	idle_power_consumption = 10
+	active_power_consumption = 100
+
+/obj/machinery/autolathe/clothlathe/Initialize()
+	. = ..()
+	AddComponent(/datum/component/material_container, list(MAT_METAL, MAT_GLASS), _show_on_examine=TRUE, _after_insert=CALLBACK(src, PROC_REF(AfterMaterialInsert)))
+	component_parts = list()
+	component_parts += new board_type(null)
+	component_parts += new /obj/item/stock_parts/matter_bin(null)
+	component_parts += new /obj/item/stock_parts/matter_bin(null)
+	component_parts += new /obj/item/stock_parts/matter_bin(null)
+	component_parts += new /obj/item/stock_parts/manipulator(null)
+	component_parts += new /obj/item/stack/sheet/glass(null)
+	RefreshParts()
+
+	wires = new(src)
+	files = new /datum/research/clothlathe(src)
+	matching_designs = list()
+
 /obj/machinery/autolathe/Initialize()
 	. = ..()
 	AddComponent(/datum/component/material_container, list(MAT_METAL, MAT_GLASS), _show_on_examine=TRUE, _after_insert=CALLBACK(src, PROC_REF(AfterMaterialInsert)))
