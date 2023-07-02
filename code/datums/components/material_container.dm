@@ -417,3 +417,13 @@
 	name = "Plastic"
 	id = MAT_PLASTIC
 	sheet_type = /obj/item/stack/sheet/plastic
+
+datum/material/cloth
+	name = "Cloth"
+	id = MAT_CLOTH
+	sheet_type = /obj/item/stack/sheet/cloth
+
+datum/material/durathread
+	name = "Durathread"
+	id = MAT_DURATHREAD
+	sheet_type = /obj/item/stack/sheet/durathread

@@ -72,6 +72,8 @@
 #define MAT_TITANIUM		"$titanium"
 #define MAT_BIOMASS			"$biomass"
 #define MAT_PLASTIC			"$plastic"
+#define MAT_CLOTH			"$cloth"
+#define MAT_DURATHREAD		"$durathread"
 //The amount of materials you get from a sheet of mineral like iron/diamond/glass etc
 #define MINERAL_MATERIAL_AMOUNT 2000
 //The maximum size of a stack object.

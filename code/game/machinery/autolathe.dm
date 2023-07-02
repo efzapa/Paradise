@@ -38,17 +38,17 @@
 	var/list/categories = list("Tools", "Electronics", "Construction", "Communication", "Security", "Machinery", "Medical", "Miscellaneous", "Dinnerware", "Imported")
 	var/board_type = /obj/item/circuitboard/autolathe
 
-/obj/machinery/autolathe/clothlathe
-	name = "clothlathe"
+/obj/machinery/autolathe/autoloom
+	name = "autoloom"
 	desc = "It produces items using cloth and durathread."
 	icon_state = "clothlathe"
 	density = TRUE
 	idle_power_consumption = 10
 	active_power_consumption = 100
 
-/obj/machinery/autolathe/clothlathe/Initialize()
+/obj/machinery/autolathe/autoloom/Initialize()
 	. = ..()
-	AddComponent(/datum/component/material_container, list(MAT_METAL, MAT_GLASS), _show_on_examine=TRUE, _after_insert=CALLBACK(src, PROC_REF(AfterMaterialInsert)))
+	AddComponent(/datum/component/material_container, list(MAT_CLOTH, MAT_DURATHREAD), _show_on_examine=TRUE, _after_insert=CALLBACK(src, PROC_REF(AfterMaterialInsert)))
 	component_parts = list()
 	component_parts += new board_type(null)
 	component_parts += new /obj/item/stock_parts/matter_bin(null)
@@ -59,8 +59,68 @@
 	RefreshParts()
 
 	wires = new(src)
-	files = new /datum/research/clothlathe(src)
+	files = new /datum/research/autoloom(src)
 	matching_designs = list()
+
+/obj/machinery/autolathe/autoloom/ui_static_data(mob/user)
+	var/list/data = list()
+	data["categories"] = categories
+	if(!recipiecache.len)
+		var/list/recipes = list()
+		for(var/v in files.known_designs)
+			var/datum/design/D = files.known_designs[v]
+			var/list/cost_list = design_cost_data(D)
+			var/list/matreq = list()
+			for(var/list/x in cost_list)
+				if(!x["amount"])
+					continue
+				if(x["name"] == "cloth") // Do not use MAT_METAL or MAT_GLASS here.
+					matreq["metal"] = x["amount"]
+				if(x["name"] == "durathread")
+					matreq["glass"] = x["amount"]
+			var/obj/item/I = D.build_path
+			var/maxmult = 1
+			if(ispath(D.build_path, /obj/item/stack))
+				maxmult = D.maxstack
+
+			var/list/default_categories = D.category
+			var/list/categories = istype(default_categories) ? default_categories.Copy() : list()
+
+			if(imported[D.id])
+				categories |= "Imported"
+
+			recipes.Add(list(list(
+				"name" = D.name,
+				"category" = categories,
+				"uid" = D.UID(),
+				"requirements" =  matreq,
+				"hacked" = ("hacked" in categories) ? TRUE : FALSE,
+				"max_multiplier" = maxmult,
+				"image" = "[icon2base64(icon(initial(I.icon), initial(I.icon_state), SOUTH, 1))]"
+			)))
+		recipiecache = recipes
+	data["recipes"] = recipiecache
+	return data
+
+/obj/machinery/autolathe/autoloom/ui_data(mob/user)
+	var/list/data = list()
+	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
+	data["total_amount"] = materials.total_amount
+	data["max_amount"] = materials.max_amount
+	data["fill_percent"] = round((materials.total_amount / materials.max_amount) * 100)
+	data["cloth_amount"] = materials.amount(MAT_CLOTH)
+	data["durathread_amount"] = materials.amount(MAT_DURATHREAD)
+	data["busyname"] =  FALSE
+	data["busyamt"] = 1
+	if(length(being_built) > 0)
+		var/datum/design/D = being_built[1]
+		data["busyname"] =  istype(D) && D.name ? D.name : FALSE
+		data["busyamt"] = length(being_built) > 1 ? being_built[2] : 1
+	data["showhacked"] = hacked ? TRUE : FALSE
+	data["buildQueue"] = queue
+	data["buildQueueLen"] = queue.len
+	return data
+
 
 /obj/machinery/autolathe/Initialize()
 	. = ..()

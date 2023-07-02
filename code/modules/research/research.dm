@@ -212,16 +212,16 @@ research holder datum.
 		return TRUE
 	return ..()
 
-//Clothlathe files
-/datum/research/clothlathe
+//Autoloom files
+/datum/research/autoloom
 
-/datum/research/clothlathe/DesignHasReqs(datum/design/D)
-	return D && (D.build_type & CLOTHLATHE) && ("initial" in D.category)
+/datum/research/autoloom/DesignHasReqs(datum/design/D)
+	return D && (D.build_type & AUTOLOOM) && ("initial" in D.category)
 
-/datum/research/clothlathe/CanAddDesign2Known(datum/design/design)
+/datum/research/autoloom/CanAddDesign2Known(datum/design/design)
 
 	for(var/mat in design.materials)
-		if(mat != MAT_METAL && mat != MAT_GLASS)
+		if(mat != MAT_CLOTH && mat != MAT_DURATHREAD)
 			return FALSE
 
 	return ..()

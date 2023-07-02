@@ -16,6 +16,8 @@ The currently supporting non-reagent materials:
 - MAT_DIAMOND (/obj/item/stack/diamond).
 - MAT_BANANIUM (/obj/item/stack/bananium).
 - MAT_TRANQUILLITE (/obj/item/stack/tranquillite).
+- MAT_CLOTH (/obj/item/stack/sheet/cloth).
+- MAT_DURATHREAD (/obj/item/stack/sheet/durathread).
 (Insert new ones here)
 
 Don't add new keyword/IDs if they are made from an existing one (such as rods which are made from metal). Only add raw materials.

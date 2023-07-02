@@ -9,7 +9,7 @@
 /// Used for gamma armoury lathe designs
 #define GAMMALATHE		256
 //Note: More then one of these can be added to a design but imprinter and lathe designs are incompatable.
-#define CLOTHLATHE		512
+#define AUTOLOOM		512
 
 // Demotion Console (card/minor/*) departments
 #define TARGET_DEPT_GENERIC 1
