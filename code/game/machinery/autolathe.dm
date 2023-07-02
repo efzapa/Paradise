@@ -75,9 +75,9 @@
 				if(!x["amount"])
 					continue
 				if(x["name"] == "cloth") // Do not use MAT_METAL or MAT_GLASS here.
-					matreq["metal"] = x["amount"]
+					matreq["cloth"] = x["amount"]
 				if(x["name"] == "durathread")
-					matreq["glass"] = x["amount"]
+					matreq["durathread"] = x["amount"]
 			var/obj/item/I = D.build_path
 			var/maxmult = 1
 			if(ispath(D.build_path, /obj/item/stack))
@@ -119,6 +119,96 @@
 	data["showhacked"] = hacked ? TRUE : FALSE
 	data["buildQueue"] = queue
 	data["buildQueueLen"] = queue.len
+	return data
+
+/obj/machinery/autolathe/autoloom/ui_act(action, list/params, datum/tgui/ui, datum/ui_state/state)
+	if(..())
+		return FALSE
+
+	add_fingerprint(usr)
+
+	. = TRUE
+	switch(action)
+		if("clear_queue")
+			queue = list()
+		if("remove_from_queue")
+			var/index = text2num(params["remove_from_queue"])
+			if(isnum(index) && ISINRANGE(index, 1, queue.len))
+				remove_from_queue(index)
+				to_chat(usr, "<span class='notice'>Removed item from queue.</span>")
+		if("make")
+			BuildTurf = loc
+			var/datum/design/design_last_ordered
+			design_last_ordered = locateUID(params["make"])
+			if(!istype(design_last_ordered))
+				to_chat(usr, "<span class='warning'>Invalid design</span>")
+				return
+			if(!(design_last_ordered.id in files.known_designs))
+				to_chat(usr, "<span class='warning'>Invalid design (not in autolathe's known designs, report this error.)</span>")
+				return
+			var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
+			var/coeff = get_coeff(design_last_ordered)
+			if(design_last_ordered.materials["$cloth"] / coeff > materials.amount(MAT_CLOTH))
+				to_chat(usr, "<span class='warning'>Invalid design (not enough metal)</span>")
+				return
+			if(design_last_ordered.materials["$durathread"] / coeff > materials.amount(MAT_DURATHREAD))
+				to_chat(usr, "<span class='warning'>Invalid design (not enough glass)</span>")
+				return
+			if(!hacked && ("hacked" in design_last_ordered.category))
+				to_chat(usr, "<span class='warning'>Invalid design (lathe requires hacking)</span>")
+				return
+			//multiplier checks : only stacks can have one and its value is 1, 10 ,25 or max_multiplier
+			var/multiplier = text2num(params["multiplier"])
+			var/max_multiplier = min(design_last_ordered.maxstack, design_last_ordered.materials[MAT_CLOTH] ?round(materials.amount(MAT_CLOTH)/design_last_ordered.materials[MAT_CLOTH]):INFINITY,design_last_ordered.materials[MAT_DURATHREAD]?round(materials.amount(MAT_DURATHREAD)/design_last_ordered.materials[MAT_DURATHREAD]):INFINITY)
+			var/is_stack = ispath(design_last_ordered.build_path, /obj/item/stack)
+
+			if(!is_stack && (multiplier > 1))
+				return
+			if(!(multiplier in list(1, 10, 25, max_multiplier))) //"enough materials ?" is checked in the build proc
+				message_admins("Player [key_name_admin(usr)] attempted to pass invalid multiplier [multiplier] to an autolathe in ui_act. Possible href exploit.")
+				return
+			if((queue.len + 1) < queue_max_len)
+				add_to_queue(design_last_ordered, multiplier)
+			else
+				to_chat(usr, "<span class='warning'>The autolathe queue is full!</span>")
+			if(!busy)
+				busy = TRUE
+				process_queue()
+				busy = FALSE
+
+/obj/machinery/autolathe/autoloom/proc/design_cost_data(datum/design/D)
+	var/list/data = list()
+	var/coeff = get_coeff(D)
+	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
+	var/has_cloth = 1
+	if(D.materials[MAT_CLOTH] && (materials.amount(MAT_CLOTH) < (D.materials[MAT_CLOTH] / coeff)))
+		has_cloth = 0
+	var/has_durathread = 1
+	if(D.materials[MAT_DURATHREAD] && (materials.amount(MAT_DURATHREAD) < (D.materials[MAT_DURATHREAD] / coeff)))
+		has_durathread = 0
+
+	data[++data.len] = list("name" = "cloth", "amount" = D.materials[MAT_CLOTH] / coeff, "is_red" = !has_cloth)
+	data[++data.len] = list("name" = "durathread", "amount" = D.materials[MAT_DURATHREAD] / coeff, "is_red" = !has_durathread)
+
+	return data
+
+/obj/machinery/autolathe/autoloom/proc/queue_data(list/data)
+	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
+	var/temp_cloth = materials.amount(MAT_CLOTH)
+	var/temp_durathread = materials.amount(MAT_DURATHREAD)
+	data["processing"] = being_built.len ? get_processing_line() : null
+	if(istype(queue) && queue.len)
+		var/list/data_queue = list()
+		for(var/list/L in queue)
+			var/datum/design/D = L[1]
+			var/list/LL = get_design_cost_as_list(D, L[2])
+			data_queue[++data_queue.len] = list("name" = initial(D.name), "can_build" = can_build(D, L[2], temp_cloth, temp_durathread), "multiplier" = L[2])
+			temp_cloth = max(temp_cloth - LL[1], 1)
+			temp_durathread = max(temp_durathread - LL[2], 1)
+		data["queue"] = data_queue
+		data["queue_len"] = data_queue.len
+	else
+		data["queue"] = null
 	return data
 
 
