@@ -33,6 +33,81 @@
 	else
 		..()
 
+var/armor_block = 0 //Get the target's armor values for normal attack damage.
+var/armor_duration = 0 //The more force the bottle has, the longer the duration.
+var/is_glass = TRUE
+var/const/duration = 13
+
+/obj/item/reagent_containers/food/drinks/drinkingglass/proc/smash(mob/living/target, mob/living/user, ranged = FALSE)
+
+	//Creates a shattering noise and replaces the bottle with a broken_glass
+	var/new_location = get_turf(loc)
+	var/obj/item/broken_glass/B = new /obj/item/broken_glass(new_location)
+	if(ranged)
+		B.loc = new_location
+	else
+		user.drop_item()
+		user.put_in_active_hand(B)
+	B.icon_state = icon_state
+
+	var/icon/I = new('icons/obj/drinks.dmi', icon_state)
+	I.Blend(B.broken_outline, ICON_OVERLAY, rand(5), 1)
+	I.SwapColor(rgb(255, 0, 220, 255), rgb(0, 0, 0, 0))
+	B.icon = I
+
+	if(is_glass)
+		if(prob(33))
+			new/obj/item/shard(new_location)
+		playsound(src, "shatter", 70, 1)
+	else
+		B.name = "broken carton"
+		B.force = 0
+		B.throwforce = 0
+		B.desc = "A carton with the bottom half burst open. Might give you a papercut."
+	transfer_fingerprints_to(B)
+
+	qdel(src)
+
+/obj/item/reagent_containers/food/drinks/drinkingglass/proc/SplashReagents(mob/M)
+	if(reagents && reagents.total_volume)
+		M.visible_message("<span class='danger'>The contents of \the [src] splashes all over [M]!</span>")
+		reagents.reaction(M, REAGENT_TOUCH)
+		reagents.clear_reagents()
+
+/obj/item/reagent_containers/food/drinks/drinkingglass/throw_impact(atom/target,mob/thrower)
+	..()
+	SplashReagents(target)
+	smash(target, thrower, ranged = TRUE)
+
+/obj/item/reagent_containers/food/drinks/drinkingglass/decompile_act(obj/item/matter_decompiler/C, mob/user)
+	if(!reagents.total_volume)
+		C.stored_comms["glass"] += 3
+		qdel(src)
+		return TRUE
+	return ..()
+
+//Keeping this here for now, I'll ask if I should keep it here.
+/obj/item/broken_glass
+	name = "Broken Glass"
+	desc = "A glass with a sharp broken bottom."
+	icon = 'icons/obj/drinks.dmi'
+	icon_state = "broken_glass" //re-using sprites, fight me
+	force = 9
+	throwforce = 5
+	throw_speed = 3
+	throw_range = 5
+	w_class = WEIGHT_CLASS_TINY
+	item_state = "broken_glass"
+	hitsound = 'sound/weapons/bladeslice.ogg'
+	attack_verb = list("stabbed", "slashed", "attacked")
+	var/icon/broken_outline = icon('icons/obj/drinks.dmi', "broken")
+	sharp = TRUE
+
+/obj/item/broken_glass/decompile_act(obj/item/matter_decompiler/C, mob/user)
+	C.stored_comms["glass"] += 3
+	qdel(src)
+	return TRUE
+
 /obj/item/reagent_containers/food/drinks/drinkingglass/fire_act(datum/gas_mixture/air, exposed_temperature, exposed_volume, global_overlay = TRUE)
 	if(!reagents.total_volume)
 		return
