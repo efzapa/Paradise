@@ -75,9 +75,12 @@ var/const/duration = 13
 		reagents.clear_reagents()
 
 /obj/item/reagent_containers/food/drinks/drinkingglass/throw_impact(atom/target,mob/thrower)
-	..()
-	SplashReagents(target)
-	smash(target, thrower, ranged = TRUE)
+	if(HAS_TRAIT(src, TRAIT_ALCOHOL_TOLERANCE) == "Bartender")
+		return
+	else
+		..()
+		SplashReagents(target)
+		smash(target, thrower, ranged = TRUE)
 
 /obj/item/reagent_containers/food/drinks/drinkingglass/decompile_act(obj/item/matter_decompiler/C, mob/user)
 	if(!reagents.total_volume)
