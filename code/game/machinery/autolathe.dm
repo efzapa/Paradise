@@ -144,15 +144,15 @@
 				to_chat(usr, "<span class='warning'>Invalid design</span>")
 				return
 			if(!(design_last_ordered.id in files.known_designs))
-				to_chat(usr, "<span class='warning'>Invalid design (not in autolathe's known designs, report this error.)</span>")
+				to_chat(usr, "<span class='warning'>Invalid design (not in autoloom's known designs, report this error.)</span>")
 				return
 			var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
 			var/coeff = get_coeff(design_last_ordered)
 			if(design_last_ordered.materials["$cloth"] / coeff > materials.amount(MAT_CLOTH))
-				to_chat(usr, "<span class='warning'>Invalid design (not enough metal)</span>")
+				to_chat(usr, "<span class='warning'>Invalid design (not enough cloth)</span>")
 				return
 			if(design_last_ordered.materials["$durathread"] / coeff > materials.amount(MAT_DURATHREAD))
-				to_chat(usr, "<span class='warning'>Invalid design (not enough glass)</span>")
+				to_chat(usr, "<span class='warning'>Invalid design (not enough durathread)</span>")
 				return
 			if(!hacked && ("hacked" in design_last_ordered.category))
 				to_chat(usr, "<span class='warning'>Invalid design (lathe requires hacking)</span>")
@@ -165,18 +165,18 @@
 			if(!is_stack && (multiplier > 1))
 				return
 			if(!(multiplier in list(1, 10, 25, max_multiplier))) //"enough materials ?" is checked in the build proc
-				message_admins("Player [key_name_admin(usr)] attempted to pass invalid multiplier [multiplier] to an autolathe in ui_act. Possible href exploit.")
+				message_admins("Player [key_name_admin(usr)] attempted to pass invalid multiplier [multiplier] to an autoloom in ui_act. Possible href exploit.")
 				return
 			if((queue.len + 1) < queue_max_len)
 				add_to_queue(design_last_ordered, multiplier)
 			else
-				to_chat(usr, "<span class='warning'>The autolathe queue is full!</span>")
+				to_chat(usr, "<span class='warning'>The autoloom queue is full!</span>")
 			if(!busy)
 				busy = TRUE
 				process_queue()
 				busy = FALSE
 
-/obj/machinery/autolathe/autoloom/proc/design_cost_data(datum/design/D)
+/obj/machinery/autolathe/autoloom/design_cost_data(datum/design/D)
 	var/list/data = list()
 	var/coeff = get_coeff(D)
 	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
@@ -192,7 +192,7 @@
 
 	return data
 
-/obj/machinery/autolathe/autoloom/proc/queue_data(list/data)
+/obj/machinery/autolathe/autoloom/queue_data(list/data)
 	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
 	var/temp_cloth = materials.amount(MAT_CLOTH)
 	var/temp_durathread = materials.amount(MAT_DURATHREAD)
@@ -211,6 +211,64 @@
 		data["queue"] = null
 	return data
 
+/obj/machinery/autolathe/autoloom/ui_interact(mob/user, ui_key = "main", datum/tgui/ui = null, force_open = TRUE, datum/tgui/master_ui = null, datum/ui_state/state = GLOB.default_state)
+	ui = SStgui.try_update_ui(user, src, ui_key, ui, force_open)
+	if(!ui)
+		ui = new(user, src, ui_key, "Autoloom", name, 750, 700, master_ui, state)
+		ui.open()
+
+/obj/machinery/autolathe/autoloom/build_item(datum/design/D, multiplier)
+	desc = initial(desc)+"\nIt's building \a [initial(D.name)]."
+	var/is_stack = ispath(D.build_path, /obj/item/stack)
+	var/coeff = get_coeff(D)
+	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
+	var/cloth_cost = D.materials[MAT_CLOTH]
+	var/durathread_cost = D.materials[MAT_DURATHREAD]
+	var/power = max(2000, (cloth_cost+durathread_cost)*multiplier/5)
+	if(can_build(D, multiplier))
+		being_built = list(D, multiplier)
+		use_power(power)
+		icon_state = "autolathe"
+		flick("autolathe_n",src)
+		if(is_stack)
+			var/list/materials_used = list(MAT_CLOTH=cloth_cost*multiplier, MAT_DURATHREAD=durathread_cost*multiplier)
+			materials.use_amount(materials_used)
+		else
+			var/list/materials_used = list(MAT_CLOTH=cloth_cost/coeff, MAT_DURATHREAD=durathread_cost/coeff)
+			materials.use_amount(materials_used)
+		SStgui.update_uis(src)
+		sleep(32/coeff)
+		if(is_stack)
+			var/obj/item/stack/S = new D.build_path(BuildTurf)
+			S.amount = multiplier
+		else
+			var/obj/item/new_item = new D.build_path(BuildTurf)
+			new_item.materials[MAT_CLOTH] /= coeff
+			new_item.materials[MAT_DURATHREAD] /= coeff
+	SStgui.update_uis(src)
+	desc = initial(desc)
+
+/obj/machinery/autolathe/autoloom/AfterMaterialInsert(type_inserted, id_inserted, amount_inserted)
+	switch(id_inserted)
+		if(MAT_CLOTH)
+			flick("autolathe_o", src)//plays cloth insertion animation (need to animate)
+		if(MAT_DURATHREAD)
+			flick("autolathe_r", src)//plays durathread insertion animation (need to animate)
+	use_power(min(1000, amount_inserted / 100))
+	SStgui.update_uis(src)
+
+/obj/machinery/autolathe/autoloom/RefreshParts()
+	var/tot_rating = 0
+	prod_coeff = 0
+	for(var/obj/item/stock_parts/matter_bin/MB in component_parts)
+		tot_rating += MB.rating
+	tot_rating *= 25000
+	var/datum/component/material_container/materials = GetComponent(/datum/component/material_container)
+	materials.max_amount = tot_rating * 3
+	for(var/obj/item/stock_parts/manipulator/M in component_parts)
+		prod_coeff += M.rating - 1
+	recipiecache = list()
+	SStgui.close_uis(src) // forces all connected users to re-open the TGUI. Imported entries won't show otherwise due to static_data
 
 /obj/machinery/autolathe/Initialize()
 	. = ..()
