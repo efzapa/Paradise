@@ -215,8 +215,8 @@
 	w_class = WEIGHT_CLASS_SMALL
 	throwforce = 2
 	slot_flags = SLOT_FLAG_BELT
-	storage_slots = 6
-	max_combined_w_class = 6
+	storage_slots = 20
+	max_combined_w_class = 20
 	can_hold = list(/obj/item/clothing/mask/cigarette,
 		/obj/item/lighter,
 		/obj/item/match)
@@ -348,6 +348,13 @@
 	icon_state = "shadyjimpacket"
 	item_state = "shadyjimpacket"
 	cigarette_type = /obj/item/clothing/mask/cigarette/shadyjims
+
+/obj/item/storage/fancy/cigarettes/cigpack_blackpack
+	name ="\improper Executive Select packet"
+	desc = "These cigarettes are the height of luxury. They're smooth, they're cool, and they smell like victory...and cigarette smoke."
+	icon_state = "blackpacket"
+	item_state = "blackpacket"
+	cigarette_type = /obj/item/clothing/mask/cigarette/bcigarette
 
 /obj/item/storage/fancy/cigarettes/cigpack_random
 	name ="\improper Embellished Enigma packet"

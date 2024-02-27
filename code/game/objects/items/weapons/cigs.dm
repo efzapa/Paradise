@@ -281,6 +281,13 @@ LIGHTERS ARE IN LIGHTERS.DM
 /obj/item/clothing/mask/cigarette/shadyjims
 	list_reagents = list("nicotine" = 40, "lipolicide" = 7.5, "ammonia" = 2, "atrazine" = 1, "toxin" = 1.5)
 
+/obj/item/clothing/mask/cigarette/bcigarette
+	list_reagents = list("nicotine" = 40, "menthol" = 20)
+	icon_state = "bcigoff"
+	icon_on = "bcigon"
+	icon_off = "bcigoff"
+	item_state = "bcigoff"
+
 /obj/item/clothing/mask/cigarette/rollie
 	name = "rollie"
 	desc = "A roll of dried plant matter wrapped in thin paper."
