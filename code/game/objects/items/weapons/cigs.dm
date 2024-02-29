@@ -286,6 +286,7 @@ LIGHTERS ARE IN LIGHTERS.DM
 	icon_state = "bcigoff"
 	icon_on = "bcigon"
 	icon_off = "bcigoff"
+	type_butt = /obj/item/cigbutt/black
 	item_state = "bcigoff"
 
 /obj/item/clothing/mask/cigarette/rollie
@@ -365,6 +366,11 @@ LIGHTERS ARE IN LIGHTERS.DM
 	icon_state = "cigbutt"
 	w_class = WEIGHT_CLASS_TINY
 	throwforce = 1
+
+/obj/item/cigbutt/black
+	name = "black cigarette butt"
+	desc = "A cigarette butt in a fancy black casing."
+	icon_state = "bcigbutt"
 
 /obj/item/cigbutt/Initialize(mapload)
 	. = ..()
