@@ -829,7 +829,7 @@
 	icon_state = "captain"
 
 /obj/item/card/id/hop
-	name = "Head of Personal ID"
+	name = "Head of Personnel ID"
 	registered_name = "HoP"
 	icon_state = "HoP"
 	access = list(ACCESS_SECURITY, ACCESS_SEC_DOORS, ACCESS_BRIG, ACCESS_COURT, ACCESS_FORENSICS_LOCKERS,
